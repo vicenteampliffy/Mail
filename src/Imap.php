@@ -6,7 +6,6 @@
  * Copyright and license information can be found at LICENSE.txt
  * distributed with this package.
  */
-
 namespace Eden\Mail;
 
 /**
@@ -61,6 +60,11 @@ class Imap extends Base
     protected $password = null;
 
     /**
+     * @var string|null $xoauth2token The mailbox token
+     */
+    protected $xoauth2token = null;
+
+    /**
      * @var int $tag The tag number
      */
     protected $tag = 0;
@@ -109,6 +113,7 @@ class Imap extends Base
      * @param int|null $port The IMAP port
      * @param bool     $ssl  Whether to use SSL
      * @param bool     $tls  Whether to use TLS
+     * @param *string|null $xoauth2token The oauth2token
      */
     public function __construct(
         $host,
@@ -116,7 +121,8 @@ class Imap extends Base
         $pass,
         $port = null,
         $ssl = false,
-        $tls = false
+        $tls = false,
+        $xoauth2token = null
     ) {
         Argument::i()
             ->test(1, 'string')
@@ -124,7 +130,8 @@ class Imap extends Base
             ->test(3, 'string')
             ->test(4, 'int', 'null')
             ->test(5, 'bool')
-            ->test(6, 'bool');
+            ->test(6, 'bool')
+            ->test(7, 'string', 'null');
 
         if (is_null($port)) {
             $port = $ssl ? 993 : 143;
@@ -136,6 +143,7 @@ class Imap extends Base
         $this->port = $port;
         $this->ssl = $ssl;
         $this->tls = $tls;
+        $this->xoauth2token = $xoauth2token;
     }
 
     /**
@@ -202,7 +210,14 @@ class Imap extends Base
         }
 
         //login
-        $result = $this->call('LOGIN', $this->escape($this->username, $this->password));
+	if ($this->xoauth2token) {
+		$access_token=$this->xoauth2token;
+		$auth = "user={$this->username}\1auth=Bearer {$access_token}\1\1";
+		$auth = base64_encode($auth);
+        	$result = $this->call('AUTHENTICATE XOAUTH2', $auth);
+	} else {
+        	$result = $this->call('LOGIN', $this->escape($this->username, $this->password));
+	}
 
         if (!is_array($result) || strpos(implode(' ', $result), 'OK') === false) {
             $this->disconnect();
