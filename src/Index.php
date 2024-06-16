@@ -33,10 +33,11 @@ class Index extends Base
      * @param int|null $port The IMAP port
      * @param bool     $ssl  Whether to use SSL
      * @param bool     $tls  Whether to use TLS
+     * @param *string|null $xoauth2token The oauth2token
      *
      * @return Eden\Mail\Imap
      */
-    public function imap($host, $user, $pass, $port = null, $ssl = false, $tls = false)
+    public function imap($host, $user, $pass, $port = null, $ssl = false, $tls = false, $xoauth2token = null)
     {
         Argument::i()
             ->test(1, 'string')
@@ -44,9 +45,10 @@ class Index extends Base
             ->test(3, 'string')
             ->test(4, 'int', 'null')
             ->test(5, 'bool')
-            ->test(6, 'bool');
+            ->test(6, 'bool')
+            ->test(7, 'string', 'null');
             
-        return Imap::i($host, $user, $pass, $port, $ssl, $tls);
+        return Imap::i($host, $user, $pass, $port, $ssl, $tls, $xoauth2token);
     }
     
     /**
